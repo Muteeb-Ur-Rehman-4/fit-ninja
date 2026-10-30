@@ -13,8 +13,13 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "reference/**",
+<<<<<<< HEAD
     "scripts/**",
     "public/sw.js",
+=======
+    "worker/**",
+    "scripts/**",
+>>>>>>> origin/develop
   ]),
 ]);
 
