@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Fit Ninja
 
-## Getting Started
+Free calorie and macro tracker. Scan a barcode (Open Food Facts), log food, and watch the day fill a 3D figure
+feet-up: carbs amber, then protein tomato, then fat green. Installable phone PWA and desktop web app.
 
-First, run the development server:
+Stack: Next.js (App Router), React, TypeScript, Tailwind CSS v4, react-three-fiber/three, optional Supabase, hand-written service worker.
+
+## Run
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
+npm run build && npm start   # production (service worker only registers in production)
+npm run lint && npx tsc --noEmit
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Without any configuration everything is saved on the device (localStorage).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Figure assets
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`public/assets/human.json` and `human-look.json` (about 8 MB, MakeHuman CC0) are loaded lazily and cached by the service worker.
+Regenerate from `reference/body-assets` with `node scripts/convert-assets.mjs`. Icons: `node scripts/make-icons.mjs`.
 
-## Learn More
+## Optional: accounts and sync (Supabase free tier)
 
-To learn more about Next.js, take a look at the following resources:
+1. Create a project, run [supabase/schema.sql](supabase/schema.sql) in the SQL editor (table plus row level security: users only touch their own row).
+2. Authentication → Providers: enable Email and, optionally, Google. Add your site URL to the redirect list.
+3. Copy `.env.example` to `.env.local` and set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Sync stores one JSON snapshot per user; the newest of device and cloud wins on sign-in.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Optional: packaged-food search by name
 
-## Deploy on Vercel
+Open Food Facts blocks browser CORS on text search (barcode lookups work directly). Deploy the tiny proxy:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npx wrangler deploy worker/off-search-proxy.js --name fit-ninja-off --compatibility-date 2025-01-01
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Set `NEXT_PUBLIC_OFF_SEARCH_PROXY` to the worker URL.
+
+## Deploy
+
+Any static-friendly host works (Vercel, Cloudflare Pages, Netlify): build command `npm run build`, add the env vars above if used. HTTPS is required for camera and service worker.
+
+## Privacy
+
+No data is sold. Photos for "Match a photo" are read on the device by MediaPipe and never uploaded (the model and wasm are downloaded from a CDN on first use).
+
+## Not verified yet
+
+Camera scanning, real-photo pose matching, Supabase auth/sync, and service-worker install/offline were not exercised (the dev browser blocks camera and service workers, and no keys were available).
