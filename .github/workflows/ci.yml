@@ -1,0 +1,25 @@
+name: CI
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm run lint
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_BUILD_CHANNEL: ${{ github.ref_name == 'main' && 'production' || 'testing' }}
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'push'
+        with:
+          name: build-${{ github.ref_name }}
+          path: .next
+          retention-days: 7
