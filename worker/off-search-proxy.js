@@ -1,7 +1,7 @@
 // Optional Cloudflare Worker: forwards text search to Open Food Facts and adds CORS headers.
 // Deploy:  npx wrangler deploy worker/off-search-proxy.js --name fit-ninja-off --compatibility-date 2025-01-01
 // Then set NEXT_PUBLIC_OFF_SEARCH_PROXY to the worker URL.
-export default {
+const worker = {
   async fetch(request) {
     const cors = {
       "access-control-allow-origin": "*",
@@ -20,3 +20,5 @@ export default {
     return new Response(await r.text(), { status: r.status, headers: cors });
   },
 };
+
+export default worker;
